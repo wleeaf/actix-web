@@ -589,14 +589,17 @@ impl NamedFile {
                     .ok()
                     .and_then(|ranges| ranges.first().copied())
                 {
-                    ranged_req = true;
-                    length = range.length;
-                    offset = range.start;
+                    // A suffix range of an empty file selects no bytes; serve the file as is.
+                    if range.length > 0 {
+                        ranged_req = true;
+                        length = range.length;
+                        offset = range.start;
 
-                    res.insert_header((
-                        header::CONTENT_RANGE,
-                        format!("bytes {}-{}/{}", offset, offset + length - 1, self.md.len()),
-                    ));
+                        res.insert_header((
+                            header::CONTENT_RANGE,
+                            format!("bytes {}-{}/{}", offset, offset + length - 1, self.md.len()),
+                        ));
+                    }
                 } else {
                     res.insert_header((header::CONTENT_RANGE, format!("bytes */{}", length)));
                     return res.status(StatusCode::RANGE_NOT_SATISFIABLE).finish();

@@ -43,3 +43,19 @@ async fn post_ignores_valid_range() {
 async fn post_ignores_unsatisfiable_range() {
     assert_range_ignored(Method::POST, "bytes=100-200").await;
 }
+
+#[actix_web::test]
+async fn get_ignores_suffix_range_of_empty_file() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("empty.txt");
+    std::fs::write(&path, b"").unwrap();
+
+    let req = TestRequest::get()
+        .insert_header((header::RANGE, "bytes=-5"))
+        .to_http_request();
+    let res = NamedFile::open(path).unwrap().into_response(&req);
+
+    assert_eq!(res.status(), StatusCode::OK);
+    assert!(!res.headers().contains_key(header::CONTENT_RANGE));
+    assert_eq!(res.body().size(), BodySize::Sized(0));
+}

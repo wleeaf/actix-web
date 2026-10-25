@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Serve an empty file in full instead of panicking when a `NamedFile` receives a suffix byte range such as `bytes=-5`.
+
 ## 0.7.2
 
 - Evaluate request preconditions before processing `Range` headers when serving a `NamedFile`.
